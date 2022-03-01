@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         HEU课表生成器
 // @namespace    greasyfork.org/zh-CN/users/816568-chichow5
-// @version      0.4
+// @version      0.5
 // @home-url     https://greasyfork.org/zh-CN/users/816568-chichow5
 // @description  哈尔滨工程大学 / HEU course iCalendar generator/ HEU ics格式课表生成器
 // @author       Chi Chow 201906
@@ -23,20 +23,38 @@ class Course{
     constructor(raw, w, tweek){
         this.weekday = w
         this.name = raw[0]
-        this.teacher = raw[1]
-        let t = tweek.indexOf('-')
-        if (t === -1){
-            this.start_week = this.end_week = parseInt(tweek)
-        }else{
-            this.start_week = parseInt(tweek.substring(0, t))
-            this.end_week = parseInt(tweek.substring(t+1))
+        if(raw[1].endsWith('\(周\)')){
+            this.teacher = raw[0]
+            let t = raw[1].indexOf('-')
+            if (t === -1){
+                this.start_week = this.end_week = parseInt(raw[1])
+            }else{
+                this.start_week = parseInt(raw[1].substring(0, t))
+                this.end_week = parseInt(raw[1].substring(t+1))
+            }
+            t = raw[2].substring(0, raw[2].length-2)
+            this.start_time = parseInt(t.substring(1, 3))
+            this.end_time = parseInt(t.substring(t.length-2))
+            this.location = raw[3]
+            this.flag = (this.start_time === this.end_time && this.start_time === 1);
+            this.wasted = false;
         }
-        t = raw[3].substring(0, raw[3].length-2)
-        this.start_time = parseInt(t.substring(1, 3))
-        this.end_time = parseInt(t.substring(t.length-2))
-        this.location = raw[4]
-        this.flag = (this.start_time === this.end_time && this.start_time === 1);
-        this.wasted = false;
+        else{
+            this.teacher = raw[1]
+            let t = tweek.indexOf('-')
+            if (t === -1){
+                this.start_week = this.end_week = parseInt(tweek)
+            }else{
+                this.start_week = parseInt(tweek.substring(0, t))
+                this.end_week = parseInt(tweek.substring(t+1))
+            }
+            t = raw[3].substring(0, raw[3].length-2)
+            this.start_time = parseInt(t.substring(1, 3))
+            this.end_time = parseInt(t.substring(t.length-2))
+            this.location = raw[4]
+            this.flag = (this.start_time === this.end_time && this.start_time === 1);
+            this.wasted = false;
+        }
     }
  
     show(){
@@ -239,8 +257,8 @@ function generateCalendar(){
  
     var content = ""
                 + "BEGIN:VCALENDAR\r\n"
+                + "VERSION:2.0\r\n"
                 + "PRODID:HEU iCalendar Gen. By Chi Chow\r\n"
-                + "VERSION:1.0\r\n"
                 + "CALSCALE:GREGORIAN\r\n"
                 + "METHOD:PUBLISH\r\n"
                 + "X-WR-CALNAME:导出的课表\r\n"
